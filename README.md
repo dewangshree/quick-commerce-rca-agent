@@ -315,12 +315,22 @@ Explain the RCA logic.
 
 ## AI Tools Disclosure
 
-The following AI tools were used during development:
+**Tools used:** Claude, ChatGPT
 
-- **Claude** — Architecture brainstorming, LangGraph setup, LangChain setup, FastAPI scaffolding, code generation
-- **ChatGPT** — MCP integration guidance, code generation assistance
+**AI-generated:**
+- Initial FastAPI and Streamlit scaffolding (Claude)
+- LangGraph agent structure and LangChain tool stubs (Claude)
+- MCP client integration boilerplate (ChatGPT)
 
-All generated code was reviewed, tested, modified, and integrated manually.
+**Manually implemented / modified:**
+- Deterministic RCA logic and all threshold rules
+- SQL queries and database loading pipeline
+- LangGraph state graph and tool routing
+- Prompt design and agent instructions
+
+**Discarded or significantly rewritten:**
+- AI-generated MCP integration was largely rewritten to fit the Filesystem MCP Server setup
+- Initial Streamlit UI scaffold was restructured for multi-turn conversation flow
 
 ---
 
