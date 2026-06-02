@@ -230,29 +230,75 @@ Explain the RCA logic.
 
 ---
 
-## Design Decisions
+## Design Decisions and Tradeoffs
 
-### SQLite over PostgreSQL
+### SQLite vs PostgreSQL
 
-SQLite was chosen for zero-setup, fast iteration, and suitability for the assignment dataset size. A production deployment would migrate to PostgreSQL for concurrent writes and larger workloads.
+**Choice:** SQLite
 
----
+**Reason:**
+- Zero setup
+- Faster development
+- Suitable for assignment dataset size
 
-### Deterministic RCA over LLM Reasoning
-
-RCA logic is implemented in Python code rather than prompts. This guarantees consistent threshold evaluation and eliminates hallucinations. The tradeoff is reduced flexibility when business rules change — a config-driven rules engine could address this in future iterations.
-
----
-
-### Filesystem MCP over Embedded Prompts
-
-Documentation is retrieved dynamically through MCP rather than injected into the system prompt. This keeps knowledge decoupled from model weights, demonstrates real MCP integration, and makes documentation updates instant without redeployment.
+**Tradeoff:**
+- Not ideal for large-scale production workloads
 
 ---
 
-### Streamlit over Custom React Frontend
+### Deterministic RCA Logic vs LLM Reasoning
 
-Streamlit was chosen for rapid delivery and minimal setup, which is appropriate for demonstrating agent behavior in an assignment context. A production-grade UI would use React for richer interactivity and component control.
+**Choice:** Deterministic Python implementation
+
+**Reason:**
+- Consistent outputs
+- Exact threshold handling
+- No hallucinations
+
+**Tradeoff:**
+- Less flexible when business rules change
+
+---
+
+### Filesystem MCP vs Complex Enterprise MCPs
+
+**Choice:** Filesystem MCP
+
+**Reason:**
+- Simple and reliable
+- Fits documentation retrieval use case
+- Demonstrates MCP integration clearly
+
+**Tradeoff:**
+- Less representative of enterprise integrations such as GitHub, Slack, or Notion
+
+---
+
+### Streamlit vs Custom React Frontend
+
+**Choice:** Streamlit
+
+**Reason:**
+- Faster delivery
+- Minimal setup
+- Ideal for demonstrating agent behavior
+
+**Tradeoff:**
+- Limited UI customization
+
+---
+
+### LangChain vs Plain API Calls
+
+**Choice:** LangChain
+
+**Reason:**
+- Standardized tool/chain abstractions
+- Easier LangGraph integration
+- Built-in prompt management and memory utilities
+
+**Tradeoff:**
+- Adds abstraction overhead; plain API calls would be lighter for simpler use cases
 
 ---
 
