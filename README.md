@@ -1,449 +1,296 @@
 # Quick-Commerce RCA Agent
 
-AI-powered multi-turn conversational agent for OR2A SLA analysis and root-cause investigation in quick-commerce delivery operations.
+> AI-powered multi-turn conversational agent for OR2A SLA analysis and root-cause investigation in quick-commerce delivery operations.
 
 ---
 
-# Overview
+## Table of Contents
 
-This project implements a conversational RCA (Root Cause Analysis) agent for delivery operations.
-
-The agent enables operations users to:
-
-* Analyze city-level performance
-* Investigate store-level underperformance
-* Drill down into hourly metrics
-* Perform RCA using predefined business rules
-* Ask follow-up questions in natural language
-* Access operational documentation through MCP
-
-The solution supports multi-turn conversations and provides explanations based on operational metrics, RCA playbooks, and reference documentation.
-
----
-
-# Features
-
-## Multi-Turn Conversational Agent
-
-Supports natural language conversations across multiple turns.
-
-Example:
-
-1. How did Bangalore do on 2026-04-22?
-2. Why did STORE_101 underperform?
-3. Walk me through the morning hours.
-4. What about STORE_102?
-5. Compare them.
-
-The agent maintains context during the session to support drill-downs and follow-up questions.
+- [Overview](#overview)
+- [Features](#features)
+- [Architecture](#architecture)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
+- [Usage](#usage)
+- [Design Decisions](#design-decisions)
+- [Assignment Checklist](#assignment-checklist)
+- [AI Tools Disclosure](#ai-tools-disclosure)
+- [Future Improvements](#future-improvements)
 
 ---
 
-## RCA Analysis
+## Overview
 
-Implements deterministic RCA logic based on the provided playbook.
-
-The RCA engine identifies:
-
-* Demand Spike
-* Pileup
-* Sustained Pileup
-* Booking Gap
-* Utilization Gap
-
-This logic is implemented in Python code rather than prompts to ensure consistency and avoid hallucinations.
+The Quick-Commerce RCA Agent enables operations teams to investigate delivery performance through natural language. It supports multi-turn conversations, deterministic root-cause analysis, SQL-powered analytics, and dynamic documentation retrieval via an MCP server — all through a clean chat interface.
 
 ---
 
-## SQL Analytics Tool
+## Features
 
-The agent can query operational data stored in SQLite.
+### Multi-Turn Conversational Agent
 
-Supported analysis includes:
+The agent maintains session context, enabling natural drill-down investigations across multiple turns.
 
-* City-level performance
-* Store-level performance
-* Hourly performance
-* Breach analysis
-* OR2A metrics
+**Example conversation flow:**
 
----
-
-## Documentation Tool
-
-The agent can retrieve:
-
-* OR2A definitions
-* RCA playbook information
-* Dataset schema documentation
-
-through a Filesystem MCP Server.
+```
+1. "How did Bangalore do on 2026-04-22?"
+2. "Why did STORE_101 underperform?"
+3. "Walk me through the morning hours."
+4. "What about STORE_102?"
+5. "Compare them."
+```
 
 ---
 
-# Architecture
+### Deterministic RCA Engine
 
+Root-cause analysis is implemented in Python — not prompts — to ensure consistent, hallucination-free results.
+
+Detected root causes:
+
+| Root Cause | Description |
+|---|---|
+| Demand Spike | Sudden surge in order volume |
+| Pileup | Order accumulation exceeding capacity |
+| Sustained Pileup | Prolonged pileup beyond recovery threshold |
+| Booking Gap | Insufficient rider bookings relative to demand |
+| Utilization Gap | Low rider utilization during available hours |
+
+---
+
+### SQL Analytics Tool
+
+Queries operational data stored in SQLite.
+
+Supported analyses:
+
+- City-level performance summaries
+- Store-level performance breakdowns
+- Hourly metric trends
+- Breach rate calculations
+- OR2A metric aggregation
+
+---
+
+### Documentation Tool (MCP)
+
+Retrieves operational documentation dynamically through a Filesystem MCP Server.
+
+Documents accessed:
+
+- `order_ready_to_assignment.md` — OR2A metric definitions
+- `quick_commerce_rca_logic.md` — RCA playbook
+- `quick_commerce_orders_gold.md` — Dataset schema reference
+
+---
+
+## Architecture
+
+```
 User
-↓
+ │
+ ▼
 Streamlit Frontend
-↓
+ │
+ ▼
 FastAPI Backend
-↓
+ │
+ ▼
 LangGraph Agent
-↓
-LangChain Tools
-├── sql_tool
-├── rca_tool
-├── city_summary_tool
-└── docs_tool
-↓
-SQLite Database / MCP Server
-↓
-Groq LLM
+ │
+ ├── sql_tool           → SQLite Database
+ ├── rca_tool           → Deterministic RCA Engine
+ ├── city_summary_tool  → Aggregated City Metrics
+ └── docs_tool          → Filesystem MCP Server → Documentation Files
+ │
+ ▼
+Groq LLM (Llama 3.3 70B Versatile)
+```
 
 ---
 
-# Technology Stack
+## Tech Stack
 
-## Agent Framework
-
-* LangGraph
-* LangChain
-
-## LLM
-
-* Groq
-* Llama 3.3 70B Versatile
-
-## Backend
-
-* FastAPI
-* Uvicorn
-
-## Frontend
-
-* Streamlit
-
-## Database
-
-* SQLite
-
-## MCP
-
-* Filesystem MCP Server
+| Layer | Technology |
+|---|---|
+| Agent Framework | LangGraph, LangChain |
+| LLM | Groq — Llama 3.3 70B Versatile |
+| Backend | FastAPI, Uvicorn |
+| Frontend | Streamlit |
+| Database | SQLite |
+| MCP | Filesystem MCP Server |
 
 ---
 
-# MCP Integration
+## Project Structure
 
-The project includes a Filesystem MCP Server integration.
-
-Documentation is not embedded directly into prompts.
-
-Instead, the agent retrieves documentation dynamically through MCP.
-
-Flow:
-
-User Question
-→ LangGraph Agent
-→ docs_tool
-→ Filesystem MCP Server
-→ Documentation Files
-→ Response
-
-Documentation accessed through MCP:
-
-* order_ready_to_assignment.md
-* quick_commerce_rca_logic.md
-* quick_commerce_orders_gold.md
-
-This keeps knowledge separate from model weights and demonstrates external tool integration through MCP.
+```
+quick-commerce-rca-agent/
+├── main.py                        # FastAPI backend entry point
+├── app.py                         # Streamlit frontend
+├── requirements.txt
+├── .env                           # GROQ_API_KEY (not committed)
+├── data/
+│   └── quick_commerce_orders_gold_20260422.csv
+├── agent/
+│   ├── graph.py                   # LangGraph agent definition
+│   └── tools/
+│       ├── sql_tool.py
+│       ├── rca_tool.py
+│       ├── city_summary_tool.py
+│       └── docs_tool.py
+└── docs/                          # Documentation served via MCP
+    ├── order_ready_to_assignment.md
+    ├── quick_commerce_rca_logic.md
+    └── quick_commerce_orders_gold.md
+```
 
 ---
 
-# Tool Design
+## Getting Started
 
-## sql_tool
+### Prerequisites
 
-Purpose:
+- Python 3.9+
+- A [Groq API key](https://console.groq.com)
 
-Execute analytical queries against operational data stored in SQLite.
-
-Responsibilities:
-
-* Store metrics
-* City metrics
-* Hourly analysis
-* Breach calculations
-
----
-
-## rca_tool
-
-Purpose:
-
-Perform deterministic root-cause analysis.
-
-Responsibilities:
-
-* Demand spike detection
-* Pileup detection
-* Booking gap detection
-* Utilization gap detection
-
----
-
-## city_summary_tool
-
-Purpose:
-
-Generate city-level operational summaries.
-
-Responsibilities:
-
-* Store performance aggregation
-* Breach rate analysis
-* OR2A summaries
-
----
-
-## docs_tool
-
-Purpose:
-
-Retrieve operational documentation through MCP.
-
-Responsibilities:
-
-* OR2A definitions
-* RCA logic
-* Dataset schema
-
----
-
-# Dataset
-
-Input data:
-
-quick_commerce_orders_gold_20260422.csv
-
-The dataset is automatically loaded into SQLite during application startup.
-
-No manual database setup is required.
-
----
-
-# Setup
-
-## Install Dependencies
+### Installation
 
 ```bash
+git clone https://github.com/your-username/quick-commerce-rca-agent.git
+cd quick-commerce-rca-agent
 pip install -r requirements.txt
 ```
 
-## Configure Environment Variables
+### Configuration
 
-Create:
-
-```bash
-.env
-```
-
-Add:
+Create a `.env` file in the project root:
 
 ```env
-GROQ_API_KEY=your_api_key
+GROQ_API_KEY=your_api_key_here
 ```
 
----
+### Running the Application
 
-# Run
-
-## Terminal 1
+**Terminal 1 — Start the backend:**
 
 ```bash
 python main.py
 ```
 
-Starts FastAPI backend on port 8000.
+The FastAPI server starts on `http://localhost:8000`.
 
-## Terminal 2
+**Terminal 2 — Start the frontend:**
 
 ```bash
 streamlit run app.py
 ```
 
-Starts Streamlit frontend on port 8501.
+Open `http://localhost:8501` in your browser.
 
-Open:
-
-http://localhost:8501
+> The dataset is automatically loaded into SQLite on startup. No manual database setup is required.
 
 ---
 
-# Sample Questions
+## Usage
 
-## City Analysis
+### Sample Queries
 
+**City-level analysis:**
+```
 How did Bangalore do on 2026-04-22?
+```
 
----
-
-## Store RCA
-
+**Store RCA:**
+```
 Why did STORE_101 underperform that day?
+```
 
----
-
-## Hourly Investigation
-
+**Hourly drill-down:**
+```
 Walk me through the morning hours at STORE_101.
+```
 
----
-
-## Comparison
-
+**Comparison:**
+```
 Compare STORE_101 and STORE_102.
+```
 
----
-
-## Documentation
-
+**Documentation lookup:**
+```
 What is OR2A?
-
-Explain RCA logic.
-
----
-
-# Design Decisions and Tradeoffs
-
-## SQLite vs PostgreSQL
-
-Choice:
-SQLite
-
-Reason:
-
-* Zero setup
-* Faster development
-* Suitable for assignment dataset size
-
-Tradeoff:
-
-* Not ideal for large-scale production workloads
+Explain the RCA logic.
+```
 
 ---
 
-## Deterministic RCA Logic vs LLM Reasoning
+## Design Decisions
 
-Choice:
-Deterministic Python implementation
+### SQLite over PostgreSQL
 
-Reason:
-
-* Consistent outputs
-* Exact threshold handling
-* No hallucinations
-
-Tradeoff:
-
-* Less flexible when business rules change
+SQLite was chosen for zero-setup, fast iteration, and suitability for the assignment dataset size. A production deployment would migrate to PostgreSQL for concurrent writes and larger workloads.
 
 ---
 
-## Filesystem MCP vs Complex Enterprise MCPs
+### Deterministic RCA over LLM Reasoning
 
-Choice:
-Filesystem MCP
-
-Reason:
-
-* Simple and reliable
-* Fits documentation retrieval use case
-* Demonstrates MCP integration clearly
-
-Tradeoff:
-
-* Less representative of enterprise integrations such as GitHub, Slack, or Notion
+RCA logic is implemented in Python code rather than prompts. This guarantees consistent threshold evaluation and eliminates hallucinations. The tradeoff is reduced flexibility when business rules change — a config-driven rules engine could address this in future iterations.
 
 ---
 
-## Streamlit vs Custom React Frontend
+### Filesystem MCP over Embedded Prompts
 
-Choice:
-Streamlit
-
-Reason:
-
-* Faster delivery
-* Minimal setup
-* Ideal for demonstrating agent behavior
-
-Tradeoff:
-
-* Limited UI customization
+Documentation is retrieved dynamically through MCP rather than injected into the system prompt. This keeps knowledge decoupled from model weights, demonstrates real MCP integration, and makes documentation updates instant without redeployment.
 
 ---
 
-# AI Tools Used
+### Streamlit over Custom React Frontend
+
+Streamlit was chosen for rapid delivery and minimal setup, which is appropriate for demonstrating agent behavior in an assignment context. A production-grade UI would use React for richer interactivity and component control.
+
+---
+
+## Assignment Checklist
+
+| Requirement | Status |
+|---|---|
+| Multi-turn Chat Agent | ✅ |
+| LangGraph | ✅ |
+| LangChain | ✅ |
+| MCP Integration | ✅ |
+| SQL Tool | ✅ |
+| RCA Tool | ✅ |
+| Documentation Tool | ✅ |
+| FastAPI Backend | ✅ |
+| Streamlit Frontend | ✅ |
+| CSV Data Source | ✅ |
+| Conversational RCA | ✅ |
+| Sample Question Support | ✅ |
+| Follow-up Question Support | ✅ |
+| Tradeoff Documentation | ✅ |
+| AI Tool Disclosure | ✅ |
+
+---
+
+## AI Tools Disclosure
 
 The following AI tools were used during development:
 
-* Claude
-* ChatGPT
-
-Used for:
-
-* Architecture brainstorming
-* LangGraph setup
-* FastAPI scaffolding
-* MCP integration guidance
-* Code generation assistance
+- **Claude** — Architecture brainstorming, LangGraph setup, FastAPI scaffolding, code generation
+- **ChatGPT** — MCP integration guidance, code generation assistance
 
 All generated code was reviewed, tested, modified, and integrated manually.
 
 ---
 
-# Future Improvements
+## Future Improvements
 
-* Session persistence
-* Authentication
-* PostgreSQL support
-* Advanced analytics dashboards
-* Additional MCP integrations
-* Production deployment
-* Historical trend analysis
-
----
-
-# Assignment Requirement Mapping
-
-✅ Multi-turn Chat Agent
-
-✅ LangGraph
-
-✅ LangChain
-
-✅ MCP Integration
-
-✅ SQL Tool
-
-✅ RCA Tool
-
-✅ Documentation Tool
-
-✅ FastAPI Backend
-
-✅ Streamlit Frontend
-
-✅ CSV Data Source
-
-✅ Conversational RCA
-
-✅ Sample Question Support
-
-✅ Additional Follow-up Questions
-
-✅ Tradeoff Documentation
-
-✅ AI Tool Disclosure
+- Session persistence across browser refreshes
+- User authentication and role-based access
+- PostgreSQL support for production workloads
+- Advanced analytics dashboards with time-series visualizations
+- Additional MCP integrations (GitHub, Notion, Slack)
+- Historical trend analysis across multiple dates
+- Production deployment with Docker and CI/CD
