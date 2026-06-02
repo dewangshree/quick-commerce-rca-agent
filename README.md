@@ -100,6 +100,9 @@ FastAPI Backend
  ▼
 LangGraph Agent
  │
+ ▼
+LangChain Tools
+ │
  ├── sql_tool           → SQLite Database
  ├── rca_tool           → Deterministic RCA Engine
  ├── city_summary_tool  → Aggregated City Metrics
@@ -136,6 +139,7 @@ quick-commerce-rca-agent/
 │   └── quick_commerce_orders_gold_20260422.csv
 ├── agent/
 │   ├── graph.py                   # LangGraph agent definition
+│   ├── chains.py                  # LangChain chains and prompt templates
 │   └── tools/
 │       ├── sql_tool.py
 │       ├── rca_tool.py
@@ -278,7 +282,7 @@ Streamlit was chosen for rapid delivery and minimal setup, which is appropriate 
 
 The following AI tools were used during development:
 
-- **Claude** — Architecture brainstorming, LangGraph setup, FastAPI scaffolding, code generation
+- **Claude** — Architecture brainstorming, LangGraph setup, LangChain setup, FastAPI scaffolding, code generation
 - **ChatGPT** — MCP integration guidance, code generation assistance
 
 All generated code was reviewed, tested, modified, and integrated manually.
