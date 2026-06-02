@@ -74,7 +74,7 @@ Supported analyses:
 
 ---
 
-### Documentation Tool (MCP)
+### Documentation Tool (Filesystem MCP Server)
 
 Retrieves operational documentation dynamically through a Filesystem MCP Server.
 
@@ -131,24 +131,16 @@ Groq LLM (Llama 3.3 70B Versatile)
 
 ```
 quick-commerce-rca-agent/
-├── main.py                        # FastAPI backend entry point
-├── app.py                         # Streamlit frontend
+├── main.py
+├── app.py
+├── agent.py
+├── tools.py
+├── database.py
+├── mcp_client.py
+├── docs/
+├── quick_commerce_orders_gold_20260422.csv
 ├── requirements.txt
-├── .env                           # GROQ_API_KEY (not committed)
-├── data/
-│   └── quick_commerce_orders_gold_20260422.csv
-├── agent/
-│   ├── graph.py                   # LangGraph agent definition
-│   ├── chains.py                  # LangChain chains and prompt templates
-│   └── tools/
-│       ├── sql_tool.py
-│       ├── rca_tool.py
-│       ├── city_summary_tool.py
-│       └── docs_tool.py
-└── docs/                          # Documentation served via MCP
-    ├── order_ready_to_assignment.md
-    ├── quick_commerce_rca_logic.md
-    └── quick_commerce_orders_gold.md
+└── README.md
 ```
 
 ---
@@ -163,7 +155,7 @@ quick-commerce-rca-agent/
 ### Installation
 
 ```bash
-git clone https://github.com/your-username/quick-commerce-rca-agent.git
+git clone https://github.com/dewangshree/quick-commerce-rca-agent.git
 cd quick-commerce-rca-agent
 pip install -r requirements.txt
 ```
