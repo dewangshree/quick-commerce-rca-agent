@@ -100,16 +100,13 @@ FastAPI Backend
  ▼
 LangGraph Agent
  │
- ▼
-LangChain Tools
+ ├── Uses Groq LLM (Llama 3.3 70B Versatile)
  │
- ├── sql_tool           → SQLite Database
- ├── rca_tool           → Deterministic RCA Engine
- ├── city_summary_tool  → Aggregated City Metrics
- └── docs_tool          → Filesystem MCP Server → Documentation Files
- │
- ▼
-Groq LLM (Llama 3.3 70B Versatile)
+ └── LangChain Tools
+      ├── sql_tool           → SQLite Database
+      ├── rca_tool           → Deterministic RCA Engine
+      ├── city_summary_tool  → Aggregated City Metrics
+      └── docs_tool          → Filesystem MCP Server → Documentation Files
 ```
 
 ---
