@@ -1,0 +1,47 @@
+# Single-container public deployment (Render free web service, 512 MB).
+# Postgres 16 + pgvector (pgserver binaries), FastAPI and the React build in one image.
+# The database is created and loaded at BUILD time, so a cold start only starts Postgres
+# and the API, and every restart comes back to the same known-good data.
+
+FROM node:20-alpine AS web
+WORKDIR /web
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY frontend/ .
+# Same-origin API (empty base URL); production build hides Settings.
+ENV VITE_API_BASE_URL=""
+RUN npm run build
+
+FROM python:3.11-slim
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt pgserver==0.1.4
+
+RUN useradd --create-home --uid 10001 app
+COPY --chown=app qc_rca/ qc_rca/
+COPY --chown=app migrations/ migrations/
+COPY --chown=app alembic.ini main.py ./
+COPY --chown=app knowledge_base/ knowledge_base/
+COPY --chown=app data/ data/
+COPY --chown=app scripts/bootstrap_postgres.sql scripts/
+COPY --chown=app deploy/build_db.sh deploy/start.sh deploy/
+COPY --from=web --chown=app /web/dist /app/web
+RUN chmod +x deploy/*.sh
+
+USER app
+# Local-only database credentials; Postgres listens on 127.0.0.1 inside the container.
+ENV PGDATA=/app/pgdata \
+    DATABASE_URL=postgresql+psycopg://qc_app:qc_app_dev@127.0.0.1:5432/qc_rca \
+    READONLY_DATABASE_URL=postgresql+psycopg://qc_readonly:qc_readonly_dev@127.0.0.1:5432/qc_rca \
+    DB_POOL_SIZE=2 \
+    LLM_ENABLED=false \
+    FRONTEND_DIST=/app/web \
+    API_HOST=0.0.0.0 \
+    FORWARDED_ALLOW_IPS=*
+RUN API_KEY_PEPPER=build-time-only deploy/build_db.sh
+
+EXPOSE 10000
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s \
+  CMD python -c "import os,urllib.request,sys; sys.exit(0 if urllib.request.urlopen(f'http://127.0.0.1:{os.getenv(\"PORT\",\"10000\")}/health', timeout=4).status == 200 else 1)"
+CMD ["deploy/start.sh"]

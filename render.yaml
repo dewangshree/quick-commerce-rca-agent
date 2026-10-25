@@ -1,0 +1,23 @@
+# Render Blueprint: one free web service, no external database (it is built into the image).
+services:
+  - type: web
+    name: qc-ops-intelligence
+    runtime: docker
+    plan: free
+    dockerfilePath: ./deploy/Dockerfile.render
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: ENV
+        value: production
+      - key: AUTH_ENABLED
+        value: "true"
+      - key: PUBLIC_DEMO
+        value: "true"
+      - key: API_KEY_PEPPER
+        generateValue: true
+      - key: LLM_ENABLED
+        value: "false"
+      - key: INVESTIGATION_RETENTION_DAYS
+        value: "30"

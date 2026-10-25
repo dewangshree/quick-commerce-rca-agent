@@ -49,6 +49,12 @@ class Settings(BaseSettings):
 
     # Security
     auth_enabled: bool = True
+    # Public demo: requests without a key act as an anonymous per-browser "visitor" with this role.
+    # Admin endpoints still require a real key. Rate limits apply per client IP.
+    public_demo: bool = False
+    public_demo_role: str = Field(default="analyst", pattern="^(viewer|analyst)$")
+    # Serve the built React app from this directory at "/" (single-URL deployments).
+    frontend_dist: Path | None = None
     api_key_pepper: SecretStr = SecretStr("change-me-in-production")
     rate_limit_per_minute: int = 20
     cors_origins: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]

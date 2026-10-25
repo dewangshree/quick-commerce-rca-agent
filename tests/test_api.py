@@ -154,3 +154,36 @@ def test_docs_hidden_in_production(monkeypatch):
     monkeypatch.setattr(get_settings(), "env", "production")
     c = TestClient(create_app())
     assert c.get("/docs").status_code == 404 and c.get("/openapi.json").status_code == 404
+
+
+def test_public_demo_mode(client, api_keys, monkeypatch):
+    from qc_rca.security import auth
+
+    monkeypatch.setattr(get_settings(), "public_demo", True)
+    monkeypatch.setattr(auth, "_limiter", auth.RateLimiter(2))
+    a, b = {"X-Visitor-Id": "visitor-aaaaaaaa"}, {"X-Visitor-Id": "visitor-bbbbbbbb"}
+    assert client.get("/api/v1/analytics/meta").status_code == 200          # no key needed
+    r = client.post("/api/v1/investigations", json={"question": "hello"}, headers=a)
+    assert r.status_code == 200
+    mine = client.get("/api/v1/investigations", headers=a).json()
+    assert r.json()["investigation_id"] in [x["id"] for x in mine]
+    assert r.json()["investigation_id"] not in [x["id"] for x in client.get("/api/v1/investigations", headers=b).json()]
+    # rate limit is per IP, so switching visitor id does not reset it
+    assert client.post("/api/v1/investigations", json={"question": "hello"}, headers=b).status_code == 200
+    assert client.post("/api/v1/investigations", json={"question": "hello"}, headers={"X-Visitor-Id": "visitor-cccccccc"}).status_code == 429
+    # admin stays locked; a wrong key is still rejected (no silent fallback to visitor)
+    assert client.get("/api/v1/admin/audit").status_code == 403
+    assert client.get("/api/v1/analytics/meta", headers=hdr("qc_wrong")).status_code == 401
+    assert client.get("/api/v1/admin/audit", headers=hdr(api_keys["admin"])).status_code == 200
+
+
+def test_frontend_served_at_root(tmp_path, monkeypatch):
+    from fastapi.testclient import TestClient
+
+    from qc_rca.api.main import create_app
+
+    (tmp_path / "index.html").write_text("<!doctype html><title>QC</title>")
+    monkeypatch.setattr(get_settings(), "frontend_dist", tmp_path)
+    c = TestClient(create_app())
+    assert "<title>QC</title>" in c.get("/").text
+    assert c.get("/health").json()["database"] is True   # API routes still win

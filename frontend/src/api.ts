@@ -21,12 +21,21 @@ export class ApiError extends Error {
   constructor(public status: number, message: string) { super(message); }
 }
 
+// Random per-browser id: in the public demo it keeps each visitor's history separate.
+function visitorId(): string {
+  try {
+    let id = localStorage.getItem("qc.visitor");
+    if (!id) { id = Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem("qc.visitor", id); }
+    return id;
+  } catch { return "anonymous-visitor"; }
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let res: Response;
   try {
     res = await fetch(`${config.baseUrl}${path}`, {
       ...init,
-      headers: { "Content-Type": "application/json", "X-API-Key": config.apiKey, ...(init?.headers ?? {}) },
+      headers: { "Content-Type": "application/json", ...(config.apiKey ? { "X-API-Key": config.apiKey } : {}), "X-Visitor-Id": visitorId(), ...(init?.headers ?? {}) },
     });
   } catch {
     throw new ApiError(0, `Cannot reach the backend at ${config.baseUrl}. Is the API running (python main.py)?`);

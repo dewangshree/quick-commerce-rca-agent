@@ -8,6 +8,7 @@
 """
 import hashlib
 import hmac
+import re
 import secrets
 import threading
 import time
@@ -65,11 +66,28 @@ def current_principal(request: Request, raw_key: str | None = Depends(api_key_he
         principal = Principal(name="local-dev", role=Role.admin)
     else:
         principal = authenticate(raw_key)
+        if principal is None and get_settings().public_demo and not raw_key:
+            principal = _visitor(request)
         if principal is None:
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Missing or invalid API key",
                                 headers={"WWW-Authenticate": "API-Key"})
     request.state.principal = principal
     return principal
+
+
+VISITOR_ID_RE = re.compile(r"^[A-Za-z0-9_-]{8,40}$")
+
+
+def _client_ip(request: Request) -> str:
+    return request.client.host if request.client else "unknown"
+
+
+def _visitor(request: Request) -> Principal:
+    """Anonymous public-demo user, scoped to a random per-browser id (or the client IP)."""
+    vid = request.headers.get("X-Visitor-Id", "")
+    if not VISITOR_ID_RE.fullmatch(vid):
+        vid = hashlib.sha256(_client_ip(request).encode()).hexdigest()[:16]
+    return Principal(name=f"visitor-{vid[:24]}", role=Role(get_settings().public_demo_role))
 
 
 def require_role(minimum: Role):
@@ -114,8 +132,10 @@ def get_rate_limiter() -> RateLimiter:
 
 def rate_limited(minimum: Role):
     """RBAC + per-user rate limit, for expensive endpoints (investigations)."""
-    def dep(principal: Principal = Depends(require_role(minimum))) -> Principal:
-        ok, retry_after = get_rate_limiter().check(principal.name)
+    def dep(request: Request, principal: Principal = Depends(require_role(minimum))) -> Principal:
+        # Visitors can mint new ids, so they are limited per IP rather than per name.
+        key = f"ip:{_client_ip(request)}" if principal.name.startswith("visitor-") else principal.name
+        ok, retry_after = get_rate_limiter().check(key)
         if not ok:
             raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, "Rate limit exceeded",
                                 headers={"Retry-After": str(int(retry_after) + 1)})

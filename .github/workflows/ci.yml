@@ -88,3 +88,36 @@ jobs:
           test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/api/v1/analytics/meta)" = "401"
           docker compose logs api | tail -20
           docker compose down -v
+
+  render-image:
+    name: Build and smoke-test the public (Render) image
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build single-container image
+        run: docker build -f deploy/Dockerfile.render -t qc-ops-public:ci .
+      - name: Run with Render-like settings (512 MB, PORT=10000)
+        run: |
+          docker run -d --name qc --memory=512m -p 10000:10000 \
+            -e PORT=10000 -e ENV=production -e AUTH_ENABLED=true -e PUBLIC_DEMO=true \
+            -e API_KEY_PEPPER=ci-secret-value qc-ops-public:ci
+          for i in $(seq 1 40); do curl -sf http://localhost:10000/health && break; sleep 3; done
+      - name: Smoke checks
+        run: |
+          set -e
+          curl -sf http://localhost:10000/health | grep '"database":true'
+          curl -sf http://localhost:10000/ | grep -q '<div id="root">'
+          curl -sf http://localhost:10000/api/v1/analytics/meta | grep -q '2026-04-22'
+          curl -sf -X POST -H 'Content-Type: application/json' -H 'X-Visitor-Id: ci-visitor-1' \
+            -d '{"question":"Why did STORE_101 underperform?"}' http://localhost:10000/api/v1/investigations | grep -q '"status":"completed"'
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:10000/api/v1/admin/audit)" = "403"
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:10000/docs)" = "404"
+          docker stats --no-stream qc
+      - name: Restart survives (data baked into image)
+        run: |
+          docker restart qc
+          for i in $(seq 1 40); do curl -sf http://localhost:10000/health && break; sleep 3; done
+          curl -sf http://localhost:10000/api/v1/analytics/overview | grep -q '"total_orders":187171'
+      - if: always()
+        run: docker logs qc 2>&1 | tail -40

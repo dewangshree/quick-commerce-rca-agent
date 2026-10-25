@@ -9,6 +9,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 
 from qc_rca.analytics.service import NotFoundError
@@ -84,7 +85,7 @@ def create_app() -> FastAPI:
     # Added last so it is the outermost middleware: error responses carry CORS headers too,
     # otherwise the browser reports a 500 as "Failed to fetch".
     app.add_middleware(CORSMiddleware, allow_origins=s.cors_origins, allow_credentials=False,
-                       allow_methods=["GET", "POST"], allow_headers=["X-API-Key", "Content-Type", "X-Request-ID"])
+                       allow_methods=["GET", "POST"], allow_headers=["X-API-Key", "Content-Type", "X-Request-ID", "X-Visitor-Id"])
 
     @app.exception_handler(NotFoundError)
     async def not_found(_: Request, exc: NotFoundError):
@@ -120,6 +121,9 @@ def create_app() -> FastAPI:
     app.include_router(knowledge.router)
     app.include_router(admin.router)
     app.include_router(legacy.router)
+    if s.frontend_dist and (s.frontend_dist / "index.html").exists():
+        # Mounted last so API routes win; serves the React build at "/".
+        app.mount("/", StaticFiles(directory=s.frontend_dist, html=True), name="frontend")
     return app
 
 
