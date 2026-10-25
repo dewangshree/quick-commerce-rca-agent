@@ -1,11 +1,16 @@
-fastapi
-uvicorn
-streamlit
-langchain
-langchain-groq
-langgraph
-langchain-core
+# Backend (tested with Python 3.11)
+fastapi==0.162.0
+uvicorn==0.54.0
+sqlalchemy==2.1.6
+alembic==1.20.1
+psycopg[binary]==3.3.6
+pgvector==0.5.1
+pydantic==2.14.1
+pydantic-settings==2.16.1
+langgraph==1.2.17
+langgraph-checkpoint-postgres==3.2.0
+langchain-core==1.7.0
+langchain-ollama==1.1.0
+mcp==2.3.0
+httpx==0.28.1
 python-dotenv
-pandas
-requests
-httpx

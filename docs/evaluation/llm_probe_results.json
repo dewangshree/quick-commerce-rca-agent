@@ -1,0 +1,325 @@
+{
+  "model": "qwen2.5:1.5b",
+  "embedding_model": "all-minilm",
+  "ran_at": "2026-10-25 21:21:49",
+  "intent_classification": {
+    "n": 16,
+    "accuracy": 0.625,
+    "valid_enum_rate": 1.0,
+    "median_latency_ms": 5633,
+    "rows": [
+      {
+        "q": "How did Bangalore do on 2026-04-22?",
+        "expected": "city_summary",
+        "got": "sla_overview",
+        "valid_json": true,
+        "raw": "{\"intent\": \"sla_overview\"}"
+      },
+      {
+        "q": "Why did STORE_101 underperform that day?",
+        "expected": "store_rca",
+        "got": "store_rca",
+        "valid_json": true,
+        "raw": "{\"intent\": \"store_rca\"}"
+      },
+      {
+        "q": "Walk me through the morning hours at STORE_101.",
+        "expected": "hourly_drilldown",
+        "got": "hourly_drilldown",
+        "valid_json": true,
+        "raw": "{\"intent\": \"hourly_drilldown\"}"
+      },
+      {
+        "q": "Compare STORE_101 and STORE_102.",
+        "expected": "store_comparison",
+        "got": "city_comparison",
+        "valid_json": true,
+        "raw": "{\"intent\": \"city_comparison\"}"
+      },
+      {
+        "q": "Which cities had the highest breach rate?",
+        "expected": "city_comparison",
+        "got": "city_comparison",
+        "valid_json": true,
+        "raw": "{\"intent\": \"city_comparison\"}"
+      },
+      {
+        "q": "What is OR2A?",
+        "expected": "documentation",
+        "got": "documentation",
+        "valid_json": true,
+        "raw": "{\"intent\": \"documentation\"}"
+      },
+      {
+        "q": "Explain the RCA playbook.",
+        "expected": "documentation",
+        "got": "documentation",
+        "valid_json": true,
+        "raw": "{\"intent\": \"documentation\"}"
+      },
+      {
+        "q": "Which stores were the worst performers?",
+        "expected": "top_stores",
+        "got": "store_rca",
+        "valid_json": true,
+        "raw": "{\"intent\": \"store_rca\"}"
+      },
+      {
+        "q": "Give me the overall SLA numbers for the network.",
+        "expected": "sla_overview",
+        "got": "sla_overview",
+        "valid_json": true,
+        "raw": "{\"intent\": \"sla_overview\"}"
+      },
+      {
+        "q": "What's the weather in Paris?",
+        "expected": "out_of_scope",
+        "got": "documentation",
+        "valid_json": true,
+        "raw": "{\"intent\": \"documentation\"}"
+      },
+      {
+        "q": "How bad was it in Chennai?",
+        "expected": "city_summary",
+        "got": "city_summary",
+        "valid_json": true,
+        "raw": "{\"intent\": \"city_summary\"}"
+      },
+      {
+        "q": "Root cause for store 45 please",
+        "expected": "store_rca",
+        "got": "store_rca",
+        "valid_json": true,
+        "raw": "{\"intent\": \"store_rca\"}"
+      },
+      {
+        "q": "Show the hourly breakdown for STORE_003",
+        "expected": "hourly_drilldown",
+        "got": "hourly_drilldown",
+        "valid_json": true,
+        "raw": "{\n  \"intent\": \"hourly_drilldown\"\n}"
+      },
+      {
+        "q": "What does a booking gap mean?",
+        "expected": "documentation",
+        "got": "store_rca",
+        "valid_json": true,
+        "raw": "{\"intent\": \"store_rca\"}"
+      },
+      {
+        "q": "Mumbai vs Pune performance",
+        "expected": "city_comparison",
+        "got": "city_comparison",
+        "valid_json": true,
+        "raw": "{\"intent\": \"city_comparison\"}"
+      },
+      {
+        "q": "Tell me a joke",
+        "expected": "out_of_scope",
+        "got": "clarification_needed",
+        "valid_json": true,
+        "raw": "{\"intent\": \"clarification_needed\"}"
+      }
+    ]
+  },
+  "tool_calling": {
+    "n": 6,
+    "tool_name_accuracy": 0.6666666666666666,
+    "exact_args_accuracy": 0.6666666666666666,
+    "rows": [
+      {
+        "q": "Why did STORE_101 underperform on 2026-04-22?",
+        "expected_tool": "rca_tool",
+        "got_tool": null,
+        "args": null,
+        "name_ok": false,
+        "args_ok": false
+      },
+      {
+        "q": "How did Chennai do on 2026-04-22?",
+        "expected_tool": "city_summary_tool",
+        "got_tool": "city_summary_tool",
+        "args": {
+          "city": "Chennai",
+          "date": "2026-04-22"
+        },
+        "name_ok": true,
+        "args_ok": true
+      },
+      {
+        "q": "What is OR2A? Check the docs.",
+        "expected_tool": "docs_tool",
+        "got_tool": null,
+        "args": null,
+        "name_ok": false,
+        "args_ok": false
+      },
+      {
+        "q": "Run RCA for STORE_045 for 2026-04-22",
+        "expected_tool": "rca_tool",
+        "got_tool": "rca_tool",
+        "args": {
+          "date": "2026-04-22",
+          "store": "STORE_045"
+        },
+        "name_ok": true,
+        "args_ok": true
+      },
+      {
+        "q": "Summarise Noida on 2026-04-22",
+        "expected_tool": "city_summary_tool",
+        "got_tool": "city_summary_tool",
+        "args": {
+          "city": "Noida",
+          "date": "2026-04-22"
+        },
+        "name_ok": true,
+        "args_ok": true
+      },
+      {
+        "q": "Explain the RCA logic documentation",
+        "expected_tool": "docs_tool",
+        "got_tool": "docs_tool",
+        "args": {
+          "topic": "rca_logic"
+        },
+        "name_ok": true,
+        "args_ok": true
+      }
+    ]
+  },
+  "structured_output": {
+    "n": 4,
+    "valid_rate": 1.0,
+    "exact_match_rate": 0.0,
+    "rows": [
+      {
+        "q": "Why did STORE_101 underperform on 2026-04-22?",
+        "expected": {
+          "store": "STORE_101",
+          "city": null,
+          "date": "2026-04-22"
+        },
+        "got": {
+          "store": "STORE_101",
+          "city": "2026-04-22",
+          "date": "2026-04-22"
+        },
+        "valid": true,
+        "exact": false
+      },
+      {
+        "q": "How did Bangalore do on 2026-04-22?",
+        "expected": {
+          "store": null,
+          "city": "Bangalore",
+          "date": "2026-04-22"
+        },
+        "got": {
+          "store": "false",
+          "city": "",
+          "date": "2026-04-22"
+        },
+        "valid": true,
+        "exact": false
+      },
+      {
+        "q": "Hours at STORE_007 in Noida",
+        "expected": {
+          "store": "STORE_007",
+          "city": "Noida",
+          "date": null
+        },
+        "got": {
+          "store": "STORE_007",
+          "city": "Noida",
+          "date": "Hours"
+        },
+        "valid": true,
+        "exact": false
+      },
+      {
+        "q": "Chennai yesterday",
+        "expected": {
+          "store": null,
+          "city": "Chennai",
+          "date": null
+        },
+        "got": {
+          "store": "Chennai",
+          "city": "Chennai",
+          "date": "yesterday"
+        },
+        "valid": true,
+        "exact": false
+      }
+    ]
+  },
+  "grounded_narrative": {
+    "n": 4,
+    "grounded_rate": 0.25,
+    "rows": [
+      {
+        "evidence": [
+          "store",
+          "date",
+          "total_orders"
+        ],
+        "grounded": true,
+        "ungrounded_numbers": [],
+        "text": "STORE_101 experienced a weighted breach rate of 8.6%, with an average order fulfillment time of 21.0 minutes and faced issues contributing to 5 problem hours due to booking gaps affecting 70.6% of breached orders, highlighting the need for improved scheduling and inventory management strategies.",
+        "causal_language": false,
+        "grounded_rescored_after_date_fix": true
+      },
+      {
+        "evidence": [
+          "store",
+          "date",
+          "total_orders"
+        ],
+        "grounded": false,
+        "ungrounded_numbers": [
+          "22"
+        ],
+        "text": "In STORE_101 on April 22, 2026, the delivery operations manager faced a weighted breach rate of 8.6%, with an average order fulfillment time of 21.0 minutes per order and 5 problem hours due to booking gaps affecting 70.6% of breached orders.",
+        "causal_language": false,
+        "grounded_rescored_after_date_fix": true
+      },
+      {
+        "evidence": [
+          "city",
+          "date",
+          "worst_store"
+        ],
+        "grounded": false,
+        "ungrounded_numbers": [
+          "22"
+        ],
+        "text": "In Bangalore on April 22, 2026, STORE_091 experienced a worst breach rate of 81.2%, with an average order fulfillment time (OR2A) minimum of 873.2 minutes, highlighting the need for improved operational efficiency and customer service in this store.",
+        "causal_language": false,
+        "grounded_rescored_after_date_fix": true
+      },
+      {
+        "evidence": [
+          "city",
+          "date",
+          "worst_store"
+        ],
+        "grounded": false,
+        "ungrounded_numbers": [
+          "22"
+        ],
+        "text": "In Bangalore on April 22, 2026, STORE_091 experienced a worst breach rate of 81.2%, with an average order fulfillment time (OR2A) minimum of 873.2 minutes, highlighting the need for improved operational efficiency and customer service in this store.",
+        "causal_language": false,
+        "grounded_rescored_after_date_fix": true
+      }
+    ],
+    "grounded_rate_rescored_after_date_fix": 1.0,
+    "note": "Re-scored the stored narrative texts (truncated to 300 chars) after fixing a checker bug that treated '-22' in '2026-04-22' as a number. Causal-language check not re-run."
+  },
+  "embeddings": {
+    "ok": true,
+    "dim": 384,
+    "latency_ms": 943
+  }
+}

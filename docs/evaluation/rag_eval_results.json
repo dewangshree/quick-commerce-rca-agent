@@ -1,0 +1,134 @@
+{
+  "keyword": {
+    "k": 4,
+    "hit_rate": 1.0,
+    "rows": [
+      {
+        "query": "What is OR2A?",
+        "expected": "reference/order_ready_to_assignment.md",
+        "rank": 2,
+        "mode": "keyword"
+      },
+      {
+        "query": "How do I calculate weighted breach rate for a store-day?",
+        "expected": "reference/quick_commerce_rca_logic.md",
+        "rank": 1,
+        "mode": "keyword"
+      },
+      {
+        "query": "When is a demand spike flagged?",
+        "expected": "reference/quick_commerce_rca_logic.md",
+        "rank": 1,
+        "mode": "keyword"
+      },
+      {
+        "query": "What does man_hour mean and how is it computed?",
+        "expected": "reference/quick_commerce_orders_gold.md",
+        "rank": 1,
+        "mode": "keyword"
+      },
+      {
+        "query": "rider_hours_per_hour unit minutes",
+        "expected": "reference/quick_commerce_orders_gold.md",
+        "rank": 1,
+        "mode": "keyword"
+      },
+      {
+        "query": "What should we do about rider no-shows?",
+        "expected": "samples/sop_rider_supply.md",
+        "rank": 1,
+        "mode": "keyword"
+      },
+      {
+        "query": "How to handle a sustained pileup",
+        "expected": "samples/sop_pileup_and_demand.md",
+        "rank": 2,
+        "mode": "keyword"
+      },
+      {
+        "query": "severity bands red amber green",
+        "expected": "samples/sla_definitions.md",
+        "rank": 1,
+        "mode": "keyword"
+      },
+      {
+        "query": "past incident where no-shows led to a pileup",
+        "expected": "samples/incident_sample_01_evening_pileup.md",
+        "rank": 2,
+        "mode": "keyword"
+      },
+      {
+        "query": "historical morning booking gap incident",
+        "expected": "samples/incident_sample_02_morning_booking_gap.md",
+        "rank": 1,
+        "mode": "keyword"
+      }
+    ]
+  },
+  "hybrid": {
+    "k": 4,
+    "hit_rate": 1.0,
+    "rows": [
+      {
+        "query": "What is OR2A?",
+        "expected": "reference/order_ready_to_assignment.md",
+        "rank": 2,
+        "mode": "hybrid"
+      },
+      {
+        "query": "How do I calculate weighted breach rate for a store-day?",
+        "expected": "reference/quick_commerce_rca_logic.md",
+        "rank": 1,
+        "mode": "hybrid"
+      },
+      {
+        "query": "When is a demand spike flagged?",
+        "expected": "reference/quick_commerce_rca_logic.md",
+        "rank": 1,
+        "mode": "hybrid"
+      },
+      {
+        "query": "What does man_hour mean and how is it computed?",
+        "expected": "reference/quick_commerce_orders_gold.md",
+        "rank": 1,
+        "mode": "hybrid"
+      },
+      {
+        "query": "rider_hours_per_hour unit minutes",
+        "expected": "reference/quick_commerce_orders_gold.md",
+        "rank": 1,
+        "mode": "hybrid"
+      },
+      {
+        "query": "What should we do about rider no-shows?",
+        "expected": "samples/sop_rider_supply.md",
+        "rank": 1,
+        "mode": "hybrid"
+      },
+      {
+        "query": "How to handle a sustained pileup",
+        "expected": "samples/sop_pileup_and_demand.md",
+        "rank": 1,
+        "mode": "hybrid"
+      },
+      {
+        "query": "severity bands red amber green",
+        "expected": "samples/sla_definitions.md",
+        "rank": 1,
+        "mode": "hybrid"
+      },
+      {
+        "query": "past incident where no-shows led to a pileup",
+        "expected": "samples/incident_sample_01_evening_pileup.md",
+        "rank": 1,
+        "mode": "hybrid"
+      },
+      {
+        "query": "historical morning booking gap incident",
+        "expected": "samples/incident_sample_02_morning_booking_gap.md",
+        "rank": 1,
+        "mode": "hybrid"
+      }
+    ]
+  }
+}

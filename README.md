@@ -1,345 +1,136 @@
-# Quick-Commerce RCA Agent
+# Quick-Commerce AI Operations Intelligence Platform
 
-> AI-powered multi-turn conversational agent for OR2A SLA analysis and root-cause investigation in quick-commerce delivery operations.
+Evidence-based OR2A SLA analytics and root-cause investigation for quick-commerce delivery operations,
+running entirely locally: **PostgreSQL + pgvector, deterministic RCA rules, a LangGraph investigation
+workflow, local RAG, an MCP server, and a React dashboard.** No paid API keys or cloud AI services.
 
----
+> Upgraded from the original SQLite + Groq agent. The original RCA logic is preserved and verified
+> line by line against its outputs (see [docs/EVALUATION.md](docs/EVALUATION.md)).
 
-## Table of Contents
+## What it does
 
-- [Overview](#overview)
-- [Features](#features)
-- [Architecture](#architecture)
-- [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
-- [Getting Started](#getting-started)
-- [Usage](#usage)
-- [Design Decisions](#design-decisions)
-- [Assignment Checklist](#assignment-checklist)
-- [AI Tools Disclosure](#ai-tools-disclosure)
-- [Future Improvements](#future-improvements)
+* **Dashboards** (React + TS): network/city KPIs, breach rate by hour, city and store comparisons,
+  worst stores, filters by city/store/date.
+* **AI investigation chat**: multi-turn questions ("Why did STORE_101 underperform?" → "Walk me through
+  the morning hours" → "What about STORE_102?" → "Compare them").
+* **Structured incident reports**: scope, observed metrics, rule-based contributing factors with evidence
+  IDs, document citations, missing data, confidence limitations, next steps and corrective actions,
+  plus a downloadable Markdown report and an investigation history.
+* **RAG** over the RCA playbook, metric definitions and schema docs, plus clearly labelled **SAMPLE**
+  SLA/SOP/incident documents (`knowledge_base/samples/`, not real company information).
+* **MCP server** with six read-only tools for external agents.
 
----
+All numbers come from SQL and deterministic Python. Contributing factors are rule-based co-occurrences,
+never presented as proven causes. The local LLM (`qwen2.5:1.5b`) is optional; see
+[EVALUATION](docs/EVALUATION.md) for why it is not trusted with routing or calculations.
 
-## Overview
+## Quick start (local)
 
-The Quick-Commerce RCA Agent enables operations teams to investigate delivery performance through natural language. It supports multi-turn conversations, deterministic root-cause analysis, SQL-powered analytics, and dynamic documentation retrieval via an MCP server — all through a clean chat interface.
-
----
-
-## Features
-
-### Multi-Turn Conversational Agent
-
-The agent maintains session context, enabling natural drill-down investigations across multiple turns.
-
-**Example conversation flow:**
-
-```
-1. "How did Bangalore do on 2026-04-22?"
-2. "Why did STORE_101 underperform?"
-3. "Walk me through the morning hours."
-4. "What about STORE_102?"
-5. "Compare them."
-```
-
----
-
-### Deterministic RCA Engine
-
-Root-cause analysis is implemented in Python — not prompts — to ensure consistent, hallucination-free results.
-
-Detected root causes:
-
-| Root Cause | Description |
-|---|---|
-| Demand Spike | Sudden surge in order volume |
-| Pileup | Order accumulation exceeding capacity |
-| Sustained Pileup | Prolonged pileup beyond recovery threshold |
-| Booking Gap | Insufficient rider bookings relative to demand |
-| Utilization Gap | Low rider utilization during available hours |
-
----
-
-### SQL Analytics Tool
-
-Queries operational data stored in SQLite.
-
-Supported analyses:
-
-- City-level performance summaries
-- Store-level performance breakdowns
-- Hourly metric trends
-- Breach rate calculations
-- OR2A metric aggregation
-
----
-
-### Documentation Tool (Filesystem MCP Server)
-
-Retrieves operational documentation dynamically through a Filesystem MCP Server.
-
-Documents accessed:
-
-- `order_ready_to_assignment.md` — OR2A metric definitions
-- `quick_commerce_rca_logic.md` — RCA playbook
-- `quick_commerce_orders_gold.md` — Dataset schema reference
-
----
-
-## Architecture
-
-```
-User
- │
- ▼
-Streamlit Frontend
- │
- ▼
-FastAPI Backend
- │
- ▼
-LangGraph Agent
- │
- ├── Uses Groq LLM (Llama 3.3 70B Versatile)
- │
- └── LangChain Tools
-      ├── sql_tool           → SQLite Database
-      ├── rca_tool           → Deterministic RCA Engine
-      ├── city_summary_tool  → Aggregated City Metrics
-      └── docs_tool          → Filesystem MCP Server → Documentation Files
-```
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Agent Framework | LangGraph, LangChain |
-| LLM | Groq — Llama 3.3 70B Versatile |
-| Backend | FastAPI, Uvicorn |
-| Frontend | Streamlit |
-| Database | SQLite |
-| MCP | Filesystem MCP Server |
-
----
-
-## Project Structure
-
-```
-quick-commerce-rca-agent/
-├── main.py
-├── app.py
-├── agent.py
-├── tools.py
-├── database.py
-├── mcp_client.py
-├── docs/
-├── quick_commerce_orders_gold_20260422.csv
-├── requirements.txt
-└── README.md
-```
-
----
-
-## Getting Started
-
-### Prerequisites
-
-- Python 3.9+
-- A [Groq API key](https://console.groq.com)
-
-### Installation
+Requirements: Python 3.11, Node 18+, Ollama (optional). Tested on macOS (Intel), 8 GB RAM.
 
 ```bash
-git clone https://github.com/dewangshree/quick-commerce-rca-agent.git
-cd quick-commerce-rca-agent
-pip install -r requirements.txt
+# 1. Python env
+python3.11 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
+
+# 2. PostgreSQL 16 + pgvector — either your own install, or the bundled pgserver binaries:
+PGBIN=$(.venv/bin/python -c "import pgserver,os;print(os.path.dirname(pgserver.__file__))")/pginstall/bin
+$PGBIN/initdb -D .pgdata -U postgres --auth=trust -E UTF8
+$PGBIN/pg_ctl -D .pgdata -l .pgdata/server.log -o "-p 5432 -c listen_addresses=localhost" start
+$PGBIN/psql -h localhost -U postgres -d postgres -f scripts/bootstrap_postgres.sql
+
+# 3. Config, schema, data
+cp .env.example .env            # set API_KEY_PEPPER
+.venv/bin/python -m qc_rca.cli migrate
+.venv/bin/python -m qc_rca.cli ingest          # idempotent; re-runs are skipped
+.venv/bin/python -m qc_rca.cli ingest-docs     # embeds with all-minilm if Ollama is running
+.venv/bin/python -m qc_rca.cli create-key me analyst   # prints the API key once
+
+# 4. (optional) local models — ~1 GB total
+ollama serve &   # then, only if not installed: ollama pull qwen2.5:1.5b && ollama pull all-minilm
+
+# 5. Run
+.venv/bin/python main.py                       # API on http://127.0.0.1:8000  (docs: /docs)
+cd frontend && npm install && cp .env.example .env && npm run dev   # http://localhost:5173
 ```
 
-### Configuration
-
-Create a `.env` file in the project root:
-
-```env
-GROQ_API_KEY=your_api_key_here
-```
-
-### Running the Application
-
-**Terminal 1 — Start the backend:**
+**Synthetic demo days (optional).** The real dataset has a single day (2026-04-22). To demo the date
+filter and daily trend, generate clearly labelled synthetic days (seeded variations of the real day):
 
 ```bash
-python main.py
+.venv/bin/python scripts/generate_synthetic_days.py          # writes data/synthetic/SYNTHETIC_*.csv
+for f in data/synthetic/*.csv; do .venv/bin/python -m qc_rca.cli ingest --path "$f" --synthetic; done
 ```
 
-The FastAPI server starts on `http://localhost:8000`.
+Rows are stored with `is_synthetic = true`; the UI labels those dates "(synthetic)" with a warning banner,
+reports start with a SYNTHETIC DEMO DATA warning and get low confidence, and defaults/baselines use real
+dates only.
 
-**Terminal 2 — Start the frontend:**
+Paste the API key into **Settings** in the UI. CLI alternative:
+`.venv/bin/python -m qc_rca.cli ask "Why did STORE_101 underperform?"`.
+
+Legacy Streamlit UI (kept for now): `pip install streamlit requests`, then
+`QC_API_KEY=<key> streamlit run app.py`.
+
+### MCP
+
+```json
+{ "mcpServers": { "qc-ops": { "command": "/abs/path/.venv/bin/python",
+  "args": ["-m", "qc_rca.mcp_server"], "cwd": "/abs/path/quick-commerce-rca-agent" } } }
+```
+
+Tools: `store_analytics`, `rca_analysis`, `city_comparison`, `city_store_summary`, `sla_metrics`,
+`knowledge_search` (all read-only, validated, time-limited).
+
+### Tests
 
 ```bash
-streamlit run app.py
+.venv/bin/python -m pytest          # needs the local Postgres; Ollama tests skip if it is down
+.venv/bin/python scripts/llm_probe.py   # re-measure the local model's capabilities
 ```
 
-Open `http://localhost:8501` in your browser.
+Current result: **310 passed**.
 
-> The dataset is automatically loaded into SQLite on startup. No manual database setup is required.
+## API (summary — full OpenAPI at `/docs`)
 
----
+| Method & path | Role | Purpose |
+|---|---|---|
+| `GET /health` | public | DB + Ollama status |
+| `GET /api/v1/analytics/meta` | viewer | cities, stores, dates |
+| `GET /api/v1/analytics/overview?date&city` | viewer | KPIs + breach by hour |
+| `GET /api/v1/analytics/cities?date` | viewer | city comparison |
+| `GET /api/v1/analytics/cities/{city}/stores?date` | viewer | per-store roll-up |
+| `GET /api/v1/analytics/breach-by-hour?date&city&store` | viewer | hourly series |
+| `GET /api/v1/analytics/top-stores?date&city&limit&min_orders` | viewer | ranking |
+| `GET /api/v1/analytics/stores/compare?stores=A,B&date` | viewer | store comparison |
+| `GET /api/v1/analytics/stores/{store}/hours?date&hour_from&hour_to` | viewer | hourly detail |
+| `GET /api/v1/analytics/stores/{store}/rca?date` | viewer | deterministic RCA |
+| `POST /api/v1/investigations` `{question, thread_id?}` | analyst (rate-limited) | run the LangGraph workflow |
+| `GET /api/v1/investigations`, `/{id}`, `/{id}/report.md` | analyst (own) / admin (all) | history and download |
+| `POST /api/v1/knowledge/search` | analyst | hybrid retrieval with filters |
+| `POST /api/v1/admin/ingest`, `GET /api/v1/admin/audit` | admin | ingestion, audit log |
+| `POST /chat` | analyst | legacy Streamlit compatibility |
 
-## Usage
+## Storage and resources (measured)
 
-### Sample Queries
-
-**City-level analysis:**
-```
-How did Bangalore do on 2026-04-22?
-```
-
-**Store RCA:**
-```
-Why did STORE_101 underperform that day?
-```
-
-**Hourly drill-down:**
-```
-Walk me through the morning hours at STORE_101.
-```
-
-**Comparison:**
-```
-Compare STORE_101 and STORE_102.
-```
-
-**Documentation lookup:**
-```
-What is OR2A?
-Explain the RCA logic.
-```
-
----
-
-## Design Decisions and Tradeoffs
-
-### SQLite vs PostgreSQL
-
-**Choice:** SQLite
-
-**Reason:**
-- Zero setup
-- Faster development
-- Suitable for assignment dataset size
-
-**Tradeoff:**
-- Not ideal for large-scale production workloads
-
----
-
-### Deterministic RCA Logic vs LLM Reasoning
-
-**Choice:** Deterministic Python implementation
-
-**Reason:**
-- Consistent outputs
-- Exact threshold handling
-- No hallucinations
-
-**Tradeoff:**
-- Less flexible when business rules change
-
----
-
-### Filesystem MCP vs Complex Enterprise MCPs
-
-**Choice:** Filesystem MCP
-
-**Reason:**
-- Simple and reliable
-- Fits documentation retrieval use case
-- Demonstrates MCP integration clearly
-
-**Tradeoff:**
-- Less representative of enterprise integrations such as GitHub, Slack, or Notion
-
----
-
-### Streamlit vs Custom React Frontend
-
-**Choice:** Streamlit
-
-**Reason:**
-- Faster delivery
-- Minimal setup
-- Ideal for demonstrating agent behavior
-
-**Tradeoff:**
-- Limited UI customization
-
----
-
-### LangChain vs Plain API Calls
-
-**Choice:** LangChain
-
-**Reason:**
-- Standardized tool/chain abstractions
-- Easier LangGraph integration
-- Built-in prompt management and memory utilities
-
-**Tradeoff:**
-- Adds abstraction overhead; plain API calls would be lighter for simpler use cases
-
----
-
-## Assignment Checklist
-
-| Requirement | Status |
+| Item | Size |
 |---|---|
-| Multi-turn Chat Agent | ✅ |
-| LangGraph | ✅ |
-| LangChain | ✅ |
-| MCP Integration | ✅ |
-| SQL Tool | ✅ |
-| RCA Tool | ✅ |
-| Documentation Tool | ✅ |
-| FastAPI Backend | ✅ |
-| Streamlit Frontend | ✅ |
-| CSV Data Source | ✅ |
-| Conversational RCA | ✅ |
-| Sample Question Support | ✅ |
-| Follow-up Question Support | ✅ |
-| Tradeoff Documentation | ✅ |
-| AI Tool Disclosure | ✅ |
+| Python venv (lean) | 187 MB |
+| `pgserver` (PostgreSQL 16.2 + pgvector binaries) | ~10 MB wheel |
+| Postgres data dir (`.pgdata`, both databases) | 113 MB |
+| `frontend/node_modules` | 90 MB |
+| Ollama models: qwen2.5:1.5b + all-minilm | 986 MB + 45 MB |
 
----
+Idle RAM: Postgres ~50 MB with `shared_buffers=64MB`; Ollama loads models only on demand (unloads after 5 min).
 
-## AI Tools Disclosure
+## Documentation
 
-**Tools used:** Claude, ChatGPT
+* [Architecture, workflow, RAG and database diagrams](docs/ARCHITECTURE.md)
+* [Security, failure handling, scaling, architecture decisions](docs/OPERATIONS.md)
+* [Evaluation report (actual results)](docs/EVALUATION.md)
+* Reference docs used by RAG: [knowledge_base/](knowledge_base/)
 
-**AI-generated:**
-- Initial FastAPI and Streamlit scaffolding (Claude)
-- LangGraph agent structure and LangChain tool stubs (Claude)
-- MCP client integration boilerplate (ChatGPT)
+## Deployment
 
-**Manually implemented / modified:**
-- Deterministic RCA logic and all threshold rules
-- SQL queries and database loading pipeline
-- LangGraph state graph and tool routing
-- Prompt design and agent instructions
-
-**Discarded or significantly rewritten:**
-- AI-generated MCP integration was largely rewritten to fit the Filesystem MCP Server setup
-- Initial Streamlit UI scaffold was restructured for multi-turn conversation flow
-
----
-
-## Future Improvements
-
-- Session persistence across browser refreshes
-- User authentication and role-based access
-- PostgreSQL support for production workloads
-- Advanced analytics dashboards with time-series visualizations
-- Additional MCP integrations (GitHub, Notion, Slack)
-- Historical trend analysis across multiple dates
-- Production deployment with Docker and CI/CD
+Local execution needs no cloud services. Docker images, Compose and CI are **not yet included**
+(deferred). Any public deployment would need a managed PostgreSQL with pgvector and a host for
+Ollama or a CPU model server. That has not been set up or verified, and is not free by default.

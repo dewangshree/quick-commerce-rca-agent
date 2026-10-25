@@ -1,7 +1,11 @@
-import streamlit as st
-import requests
+import os
 
-API_URL = "http://localhost:8000/chat"
+import requests
+import streamlit as st
+
+# Legacy UI kept until the React frontend replaces it. Needs QC_API_KEY (analyst role).
+API_URL = os.getenv("QC_API_URL", "http://localhost:8000") + "/chat"
+API_KEY = os.getenv("QC_API_KEY", "")
 
 st.set_page_config(page_title="QC RCA Agent", page_icon="🚴", layout="wide")
 
@@ -57,7 +61,8 @@ if user_input and user_input.strip():
                 resp = requests.post(
                     API_URL,
                     json={"messages": st.session_state.messages},
-                    timeout=60,
+                    headers={"X-API-Key": API_KEY},
+                    timeout=120,
                 )
                 if resp.status_code == 200:
                     reply = resp.json()["reply"]

@@ -1,0 +1,5 @@
+-r requirements.txt
+pytest==9.1.1
+# Optional: bundled PostgreSQL 16 + pgvector binaries for local dev without Homebrew/Docker
+pgserver==0.1.4
+# Optional legacy Streamlit UI: pip install streamlit requests
