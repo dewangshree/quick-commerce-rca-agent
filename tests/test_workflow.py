@@ -26,6 +26,8 @@ REGRESSION = [
     ("Show hourly breakdown for STORE_003 between 8 and 11 hours", "hourly_drilldown"),
     ("Mumbai vs Pune", "city_comparison"),
     ("hello", "out_of_scope"),
+    ("What should we do when riders do not show up?", "documentation"),
+    ("How to handle a pileup?", "documentation"),
 ]
 
 

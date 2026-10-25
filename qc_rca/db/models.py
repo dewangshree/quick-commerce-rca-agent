@@ -198,7 +198,7 @@ class Investigation(Base):
     thread_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     question: Mapped[str] = mapped_column(Text)
     intent: Mapped[str | None] = mapped_column(String(40), nullable=True)
-    status: Mapped[str] = mapped_column(String(16))  # completed | failed | rejected
+    status: Mapped[str] = mapped_column(String(32))  # completed | partial | rejected | needs_clarification
     llm_model: Mapped[str | None] = mapped_column(String(80), nullable=True)
     llm_used: Mapped[bool] = mapped_column(Boolean, default=False)
     latency_ms: Mapped[float | None] = mapped_column(Double, nullable=True)

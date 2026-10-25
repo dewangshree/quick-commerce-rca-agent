@@ -111,6 +111,11 @@ jobs:
           curl -sf http://localhost:10000/api/v1/analytics/meta | grep -q '2026-04-22'
           curl -sf -X POST -H 'Content-Type: application/json' -H 'X-Visitor-Id: ci-visitor-1' \
             -d '{"question":"Why did STORE_101 underperform?"}' http://localhost:10000/api/v1/investigations | grep -q '"status":"completed"'
+          for q in "Tell me about the thing" "What should we do when riders do not show up?" "hello" "How did Bangalore do?"; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json' -H 'X-Visitor-Id: ci-visitor-1' \
+              -d "{\"question\":\"$q\"}" http://localhost:10000/api/v1/investigations)
+            echo "$q -> $code"; test "$code" = "200"
+          done
           test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:10000/api/v1/admin/audit)" = "403"
           test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:10000/docs)" = "404"
           curl -sf http://localhost:10000/health | grep -q '"available":true'

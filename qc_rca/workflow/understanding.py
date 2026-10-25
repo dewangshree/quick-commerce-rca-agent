@@ -25,7 +25,8 @@ INJECTION_RE = re.compile(
     r"(ignore (all|previous|prior) instructions|system prompt|drop\s+table|delete\s+from|insert\s+into|"
     r"update\s+\w+\s+set|;\s*--|<script)", re.I)
 
-DOC_WORDS = re.compile(r"\b(what is|what are|what does|define|definition|meaning|explain|how (is|are|do|does)|"
+DOC_WORDS = re.compile(r"\b(what is|what are|what does|what should|what to do|what can we do|how to|"
+                       r"how (is|are|do|does|should|can)|steps|define|definition|meaning|explain|"
                        r"playbook|threshold|thresholds|sla definition|procedure|sop|policy|escalat\w*|"
                        r"past incident|historical|previous incident|incident report|documentation|docs?)\b", re.I)
 RCA_WORDS = re.compile(r"\b(why|rca|root cause|underperform\w*|diagnos\w*|investigat\w*|what went wrong|"
