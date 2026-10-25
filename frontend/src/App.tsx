@@ -223,7 +223,7 @@ function ReportView({ r }: { r: Report }) {
       <div className="row meta">
         <span className="tag">{r.intent}</span><span className="tag">via {r.intent_source}</span>
         <span className={`tag conf-${r.confidence.level}`}>confidence: {r.confidence.level}</span>
-        <span className="muted">{r.timings_ms.total ?? ""} ms · LLM {r.llm.used ? "used" : "not used"}</span>
+        <span className="muted">{r.timings_ms.total ?? ""} ms</span>
         <button className="secondary" onClick={download}>Download report</button>
       </div>
       {r.narrative && <p className="narrative">{r.narrative}</p>}
