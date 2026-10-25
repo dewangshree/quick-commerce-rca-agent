@@ -1,0 +1,53 @@
+# Lean stack: Postgres + pgvector, API, static frontend. Ollama runs on the host (optional).
+#   API_KEY_PEPPER=<secret> docker compose up --build
+# Then create a key:  docker compose exec api python -m qc_rca.cli create-key me analyst
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./scripts/bootstrap_postgres.sql:/docker-entrypoint-initdb.d/01_bootstrap.sql:ro
+    command: ["postgres", "-c", "shared_buffers=64MB", "-c", "max_connections=40"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d qc_rca"]
+      interval: 5s
+      retries: 20
+    restart: unless-stopped
+
+  api:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ENV: ${ENV:-production}
+      DATABASE_URL: postgresql+psycopg://qc_app:qc_app_dev@db:5432/qc_rca
+      READONLY_DATABASE_URL: postgresql+psycopg://qc_readonly:qc_readonly_dev@db:5432/qc_rca
+      API_KEY_PEPPER: ${API_KEY_PEPPER:?set API_KEY_PEPPER}
+      AUTH_ENABLED: ${AUTH_ENABLED:-true}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      LLM_ENABLED: ${LLM_ENABLED:-true}
+      CORS_ORIGINS: ${CORS_ORIGINS:-["http://localhost:8080"]}
+      LOAD_SYNTHETIC: ${LOAD_SYNTHETIC:-false}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: ${PUBLIC_API_URL:-http://localhost:8000}
+    depends_on:
+      - api
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+
+volumes:
+  pgdata:

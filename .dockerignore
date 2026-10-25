@@ -1,0 +1,14 @@
+.git
+.github
+.venv
+venv
+.pgdata
+.pgbin
+.env
+**/__pycache__
+**/*.pyc
+frontend
+tests
+docs
+*.db
+.DS_Store

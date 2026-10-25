@@ -129,8 +129,36 @@ Idle RAM: Postgres ~50 MB with `shared_buffers=64MB`; Ollama loads models only o
 * [Evaluation report (actual results)](docs/EVALUATION.md)
 * Reference docs used by RAG: [knowledge_base/](knowledge_base/)
 
+## Docker
+
+```bash
+export API_KEY_PEPPER=$(python3 -c "import secrets;print(secrets.token_urlsafe(32))")
+docker compose up --build -d                      # db + api (:8000) + web (:8080)
+docker compose exec api python -m qc_rca.cli create-key me analyst
+```
+
+* `db`: `pgvector/pgvector:pg16`, bootstrapped by `scripts/bootstrap_postgres.sql` (roles + databases).
+* `api`: migrates, ingests the CSV and knowledge base (idempotent), then serves. Defaults to
+  `ENV=production` (auth required, `/docs` off). `LOAD_SYNTHETIC=true` also loads the demo days.
+* `web`: production React build behind nginx; Settings hidden; set `PUBLIC_API_URL` to the URL
+  browsers use to reach the API.
+* Ollama is not containerised; the API uses `host.docker.internal:11434` if it is running, and
+  works without it.
+
+Approximate image downloads: postgres+pgvector ~150 MB, python slim ~50 MB, node + nginx ~60 MB
+(compressed), plus Python dependencies.
+
+## CI
+
+`.github/workflows/ci.yml` runs on every push to `main` and on pull requests:
+
+1. **backend**: pytest against a real `pgvector/pgvector:pg16` service (Ollama-dependent tests skip).
+2. **frontend**: `npm ci`, typecheck, production build.
+3. **docker**: builds both images, starts `db` + `api` with Compose, checks `/health` and that
+   unauthenticated requests get 401.
+
 ## Deployment
 
-Local execution needs no cloud services. Docker images, Compose and CI are **not yet included**
-(deferred). Any public deployment would need a managed PostgreSQL with pgvector and a host for
-Ollama or a CPU model server. That has not been set up or verified, and is not free by default.
+Local execution needs no cloud services. A public deployment needs a host for the containers
+(or a managed PostgreSQL with pgvector plus a container host) and, for AI features, a machine
+running Ollama. No public deployment has been set up or verified, and it is not free by default.
