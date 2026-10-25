@@ -1,5 +1,7 @@
 # Quick-Commerce AI Operations Intelligence Platform
 
+**Live demo:** https://qc-ops-intelligence-6bok.onrender.com (free Render instance: the first visit after 15 idle minutes takes about a minute to wake up; the hosted demo runs without the local LLM, so document search is keyword-only).
+
 Evidence-based OR2A SLA analytics and root-cause investigation for quick-commerce delivery operations,
 running entirely locally: **PostgreSQL + pgvector, deterministic RCA rules, a LangGraph investigation
 workflow, local RAG, an MCP server, and a React dashboard.** No paid API keys or cloud AI services.
@@ -159,6 +161,12 @@ Approximate image downloads: postgres+pgvector ~150 MB, python slim ~50 MB, node
 
 ## Deployment
 
-Local execution needs no cloud services. A public deployment needs a host for the containers
-(or a managed PostgreSQL with pgvector plus a container host) and, for AI features, a machine
-running Ollama. No public deployment has been set up or verified, and it is not free by default.
+The public demo runs on Render's free web service from `render.yaml` and `deploy/Dockerfile.render`:
+one container with Postgres + pgvector, the API and the React build. The database is created and
+loaded at image build time, so cold starts are quick and every restart returns to the same data
+(investigation history is reset on restart). `PUBLIC_DEMO=true` lets visitors use dashboards and
+investigations without a key (per-browser history, per-IP rate limits); admin endpoints still need
+a key. CI builds this image and smoke-tests it at 512 MB (about 130 MB used).
+
+Free-tier limits (checked October 2026): sleeps after 15 minutes idle, about 1 minute to wake,
+no room for Ollama. The same image runs on any Docker host if the free tier changes.
