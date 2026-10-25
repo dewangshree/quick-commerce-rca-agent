@@ -18,7 +18,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install -r requirements.txt pgserver==0.1.4
 
-RUN useradd --create-home --uid 10001 app
+RUN useradd --create-home --uid 10001 app && chown app /app
 COPY --chown=app qc_rca/ qc_rca/
 COPY --chown=app migrations/ migrations/
 COPY --chown=app alembic.ini main.py ./
