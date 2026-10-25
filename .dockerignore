@@ -7,8 +7,10 @@ venv
 .env
 **/__pycache__
 **/*.pyc
-frontend
-tests
-docs
+frontend/node_modules
+frontend/dist
+frontend/*.tsbuildinfo
 *.db
 .DS_Store
+tests
+docs
