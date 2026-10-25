@@ -1,6 +1,6 @@
 # Quick-Commerce AI Operations Intelligence Platform
 
-**Live demo:** https://qc-ops-intelligence-6bok.onrender.com (free Render instance: the first visit after 15 idle minutes takes about a minute to wake up; the hosted demo runs without the local LLM, so document search is keyword-only).
+**Live demo:** https://qc-ops-intelligence-6bok.onrender.com (free Render instance: the first visit after 15 idle minutes takes about a minute to wake up; the hosted demo runs the all-MiniLM embedding model in-process for hybrid search, but not the Qwen LLM, which needs more than the free 512 MB).
 
 Evidence-based OR2A SLA analytics and root-cause investigation for quick-commerce delivery operations,
 running entirely locally: **PostgreSQL + pgvector, deterministic RCA rules, a LangGraph investigation
@@ -168,5 +168,8 @@ loaded at image build time, so cold starts are quick and every restart returns t
 investigations without a key (per-browser history, per-IP rate limits); admin endpoints still need
 a key. CI builds this image and smoke-tests it at 512 MB (about 130 MB used).
 
+Embeddings run in-process (`EMBEDDING_BACKEND=fastembed`, all-MiniLM-L6-v2 via ONNX, baked into the
+image), so hybrid retrieval works without Ollama; the container uses about 270 MB in CI.
+
 Free-tier limits (checked October 2026): sleeps after 15 minutes idle, about 1 minute to wake,
-no room for Ollama. The same image runs on any Docker host if the free tier changes.
+no room for the Qwen LLM. The same image runs on any Docker host if the free tier changes.
