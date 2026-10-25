@@ -16,7 +16,8 @@ FROM python:3.11-slim
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1
 WORKDIR /app
 COPY requirements.txt .
-RUN pip install -r requirements.txt pgserver==0.1.4
+# In-process embeddings (all-MiniLM-L6-v2 via ONNX) replace Ollama, which does not fit in 512 MB.
+RUN pip install -r requirements.txt pgserver==0.1.4 fastembed==0.8.1 onnxruntime==1.30.0
 
 RUN useradd --create-home --uid 10001 app && chown app /app
 COPY --chown=app qc_rca/ qc_rca/
@@ -38,8 +39,14 @@ ENV PGDATA=/app/pgdata \
     LLM_ENABLED=false \
     FRONTEND_DIST=/app/web \
     API_HOST=0.0.0.0 \
-    FORWARDED_ALLOW_IPS=*
+    FORWARDED_ALLOW_IPS=* \
+    EMBEDDING_BACKEND=fastembed \
+    FASTEMBED_CACHE_DIR=/app/models
+# Download the embedding model and embed the knowledge base at build time.
+RUN python -c "from qc_rca.llm.ollama import embed; assert len(embed(['warm up'])[0]) == 384"
 RUN API_KEY_PEPPER=build-time-only deploy/build_db.sh
+# Never reach the network for models at runtime.
+ENV HF_HUB_OFFLINE=1
 
 EXPOSE 10000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s \

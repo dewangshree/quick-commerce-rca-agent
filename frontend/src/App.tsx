@@ -62,7 +62,7 @@ function Settings({ onSaved }: { onSaved: () => void }) {
           <li>{ok(true)} Backend reachable</li>
           <li>{ok(health.database)} Database {health.database ? "connected" : "not reachable"}</li>
           <li>{ok(health.ollama.reachable && health.ollama.llm_installed)} Local AI model {health.ollama.reachable && health.ollama.llm_installed ? "available" : "not running (answers still work, without AI extras)"}</li>
-          <li>{ok(health.ollama.embedding_installed)} Document search {health.ollama.embedding_installed ? "semantic + keyword" : "keyword only"}</li>
+          <li>{ok(health.embeddings?.available)} Document search {health.embeddings?.available ? "semantic + keyword" : "keyword only"}</li>
           <li>{health.auth_enabled ? "🔒 Access key required" : "🔓 Open access (local only)"}</li>
         </ul>
       )}

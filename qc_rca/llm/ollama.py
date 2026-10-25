@@ -98,10 +98,38 @@ def _embedder():
                             client_kwargs={"timeout": s.embedding_timeout_s})
 
 
+@lru_cache
+def _fastembed():
+    from fastembed import TextEmbedding  # only installed in the hosted image
+
+    s = get_settings()
+    return TextEmbedding(model_name=s.fastembed_model, threads=1,
+                         cache_dir=str(s.fastembed_cache_dir) if s.fastembed_cache_dir else None)
+
+
+def embedding_label() -> str:
+    s = get_settings()
+    return s.fastembed_model if s.embedding_backend == "fastembed" else s.embedding_model
+
+
+def embeddings_available() -> bool:
+    s = get_settings()
+    if s.embedding_backend == "fastembed":
+        try:
+            _fastembed()
+            return True
+        except Exception:  # noqa: BLE001
+            return False
+    return bool(ollama_status().get("embedding_installed"))
+
+
 def embed(texts: list[str]) -> list[list[float]]:
     s = get_settings()
     try:
-        vectors = _embedder().embed_documents(texts)
+        if s.embedding_backend == "fastembed":
+            vectors = [v.tolist() for v in _fastembed().embed(texts, batch_size=16)]
+        else:
+            vectors = _embedder().embed_documents(texts)
     except Exception as e:  # noqa: BLE001
         raise LLMUnavailable(f"embedding failed: {type(e).__name__}: {e}"[:300]) from e
     if any(len(v) != s.embedding_dim for v in vectors):
@@ -112,3 +140,4 @@ def embed(texts: list[str]) -> list[list[float]]:
 def reset_clients() -> None:
     _chat_model.cache_clear()
     _embedder.cache_clear()
+    _fastembed.cache_clear()

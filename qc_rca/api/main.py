@@ -17,7 +17,7 @@ from qc_rca.api.routes import admin, analytics, investigations, knowledge, legac
 from qc_rca.config import get_settings
 from qc_rca.db.models import AuditLog
 from qc_rca.db.session import get_readonly_engine, session_scope
-from qc_rca.llm.ollama import ollama_status
+from qc_rca.llm.ollama import embedding_label, embeddings_available, ollama_status
 from qc_rca.observability import configure_logging, get_logger, log_event, request_id_var
 from qc_rca.retention import purge_expired
 
@@ -114,6 +114,8 @@ def create_app() -> FastAPI:
         return {"status": "ok" if db_ok else "degraded", "database": db_ok,
                 "ollama": {k: o.get(k) for k in ("reachable", "llm_model", "llm_installed", "embedding_model",
                                                  "embedding_installed")},
+                "embeddings": {"backend": s.embedding_backend, "model": embedding_label(),
+                               "available": embeddings_available()},
                 "auth_enabled": s.auth_enabled}
 
     app.include_router(analytics.router)

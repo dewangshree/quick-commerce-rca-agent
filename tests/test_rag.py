@@ -89,3 +89,19 @@ def test_chunks_are_embedded():
 
     st = corpus_stats()
     assert st["chunks"] > 0 and st["embedded_chunks"] == st["chunks"]
+
+
+def test_fastembed_backend_missing_falls_back_to_keyword(monkeypatch):
+    # The hosted image ships fastembed; dev machines may not. Retrieval must degrade, not fail.
+    import importlib.util
+
+    from qc_rca.llm import ollama
+
+    if importlib.util.find_spec("fastembed") is not None:
+        pytest.skip("fastembed installed here")
+    monkeypatch.setattr(get_settings(), "embedding_backend", "fastembed")
+    ollama.reset_clients()
+    assert ollama.embeddings_available() is False
+    res = retrieve("What is OR2A?")
+    assert res.mode == "keyword" and res.chunks and "unavailable" in res.warning
+    ollama.reset_clients()

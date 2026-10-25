@@ -8,6 +8,6 @@ PGBIN="$(python -c 'import os, pgserver; print(os.path.dirname(pgserver.__file__
 python -m qc_rca.cli migrate
 python -m qc_rca.cli ingest
 for f in data/synthetic/*.csv; do python -m qc_rca.cli ingest --path "$f" --synthetic >/dev/null; done
-python -m qc_rca.cli ingest-docs --no-embed
+python -m qc_rca.cli ingest-docs
 "$PGBIN/pg_ctl" -D "$PGDATA" -w -m fast stop >/dev/null
 echo "database baked into image"

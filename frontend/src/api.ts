@@ -78,7 +78,7 @@ export interface Report {
 export interface HistoryRow { id: string; created_at: string; question: string; intent: string; status: string; latency_ms: number; thread_id: string | null }
 
 export const api = {
-  health: () => request<{ status: string; database: boolean; auth_enabled: boolean; ollama: { reachable?: boolean; llm_installed?: boolean; embedding_installed?: boolean } }>("/health"),
+  health: () => request<{ status: string; database: boolean; auth_enabled: boolean; embeddings?: { available: boolean }; ollama: { reachable?: boolean; llm_installed?: boolean; embedding_installed?: boolean } }>("/health"),
   meta: () => request<Meta>("/api/v1/analytics/meta"),
   overview: (date?: string, city?: string) => request<{ overview: Overview; by_hour: HourRow[] }>(`/api/v1/analytics/overview${q({ date, city })}`),
   cities: (date?: string) => request<CityRow[]>(`/api/v1/analytics/cities${q({ date })}`),

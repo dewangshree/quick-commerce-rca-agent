@@ -39,6 +39,11 @@ class Settings(BaseSettings):
     # mislabelled OR2A as "order fulfillment time" (see docs/EVALUATION.md).
     llm_narrative_enabled: bool = False
     embedding_model: str = "all-minilm"
+    # "ollama" (local dev) or "fastembed" (in-process ONNX, used by the hosted image where Ollama
+    # does not fit in memory). Both serve all-MiniLM-L6-v2 (384-d); index and queries must use the same one.
+    embedding_backend: str = Field(default="ollama", pattern="^(ollama|fastembed)$")
+    fastembed_model: str = "sentence-transformers/all-MiniLM-L6-v2"
+    fastembed_cache_dir: Path | None = None
     embedding_dim: int = 384
     embedding_timeout_s: float = 20.0
 

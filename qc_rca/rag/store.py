@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 from qc_rca.config import get_settings
 from qc_rca.db.models import Document, DocumentChunk
 from qc_rca.db.session import get_readonly_engine
-from qc_rca.llm.ollama import LLMUnavailable, embed
+from qc_rca.llm.ollama import LLMUnavailable, embed, embedding_label
 from qc_rca.observability import get_logger, log_event
 from qc_rca.rag.chunking import chunk_document, load_document
 
@@ -56,7 +56,7 @@ def ingest_documents(session: Session, root: Path | None = None, with_embeddings
         doc = load_document(path, root)
         seen.add(doc.source_path)
         existing = session.scalar(select(Document).where(Document.source_path == doc.source_path))
-        needs_embed = with_embeddings and existing is not None and existing.embedding_model != s.embedding_model
+        needs_embed = with_embeddings and existing is not None and existing.embedding_model != embedding_label()
         if existing and existing.sha256 == doc.sha256 and not needs_embed:
             stats["unchanged"] += 1
             continue
@@ -64,7 +64,7 @@ def ingest_documents(session: Session, root: Path | None = None, with_embeddings
         vectors, model = [None] * len(chunks), None
         if with_embeddings:
             try:
-                vectors, model = embed([c.content for c in chunks]), s.embedding_model
+                vectors, model = embed([c.content for c in chunks]), embedding_label()
                 stats["embedded"] = True
             except LLMUnavailable as e:
                 stats["warning"] = f"embeddings unavailable, stored for keyword search only: {e}"

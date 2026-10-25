@@ -113,11 +113,19 @@ jobs:
             -d '{"question":"Why did STORE_101 underperform?"}' http://localhost:10000/api/v1/investigations | grep -q '"status":"completed"'
           test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:10000/api/v1/admin/audit)" = "403"
           test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:10000/docs)" = "404"
+          curl -sf http://localhost:10000/health | grep -q '"available":true'
+          curl -sf -X POST -H 'Content-Type: application/json' -H 'X-Visitor-Id: ci-visitor-1' \
+            -d '{"query":"what to do about rider no-shows","k":3}' http://localhost:10000/api/v1/knowledge/search \
+            | tee /tmp/search.json | grep -q '"mode":"hybrid"'
+          grep -q 'sop_rider_supply' /tmp/search.json
           docker stats --no-stream qc
+          test "$(docker inspect -f '{{.State.OOMKilled}}' qc)" = "false"
       - name: Restart survives (data baked into image)
         run: |
           docker restart qc
           for i in $(seq 1 40); do curl -sf http://localhost:10000/health && break; sleep 3; done
           curl -sf http://localhost:10000/api/v1/analytics/overview | grep -q '"total_orders":187171'
+          curl -sf -X POST -H 'Content-Type: application/json' -d '{"query":"sustained pileup","k":2}' \
+            http://localhost:10000/api/v1/knowledge/search | grep -q '"mode":"hybrid"'
       - if: always()
         run: docker logs qc 2>&1 | tail -40
